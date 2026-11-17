@@ -1,30 +1,69 @@
-# AirDrop Fix – Hackintosh with Intel Wi-Fi (Sequoia 15.8.x)
+<div align="center">
 
-AirDrop on an Intel Wi-Fi card (tested: AX201, ASUS Vivobook K513EA, i5-1135G7, macOS Sequoia 15.8.3 / 24H241, OpenCore).
-Mac must stay connected to Wi-Fi; AirDrop works both ways with the iPhone (iPhone Wi-Fi may be off).
+# Intel Wi-Fi AirDrop · Hackintosh
 
-This repo only contains an installer script and notes. The kexts are NOT included; they come from the upstream projects:
-- ForbiddenItlwm (retropineaple) 0.5.4-beta.2, Sequoia build: https://github.com/retropineaple/ForbiddenItlwm/releases
-- BTLEAdvFixup 0.9.1 (Sequoia build), from the same release / its dependencies page
-- Also needed: Lilu, IntelBluetoothFirmware, BlueToolFixup
+**Tiger Lake-U · ASUS VivoBook K513EA · macOS Sequoia**
 
-## Install
-1. Download the two kexts (Sequoia builds) into a folder next to `install_airdrop.py`:
-   `ForbiddenItlwm.kext`, `BTLEAdvFixup.kext`
-2. Run (EFI of your boot disk or pendrive):
-   `python3 install_airdrop.py /Volumes/<EFI>/EFI/OC`
-3. The script backs up config and old kexts to `~/efi_backup/airdrop_<time>/`, copies the kexts, disables
-   AirportItlwm / itlwm / IntelBTPatcher, inserts BTLEAdvFixup + ForbiddenItlwm after Lilu/BT kexts, and adds the boot flags.
-4. Reset NVRAM, boot, join Wi-Fi, wait a minute, then check:
-   `ioreg -l -w0 | grep -E '"ItlwmAWDL(InterfaceBuild|BuildCheck)"|"ITLAWDLCoex(Added|Channel|CountryLearned)"'`
-   Expected: BuildCheck `verified`, Added Yes, Channel 149, CountryLearned Yes.
-5. iPhone: AirDrop "Everyone for 10 Minutes".
+![macOS](https://img.shields.io/badge/macOS-Sequoia%2015-7B61FF?style=for-the-badge&logo=apple)
+![Wi-Fi](https://img.shields.io/badge/Wi--Fi-Intel-0071C5?style=for-the-badge&logo=intel)
+![Status](https://img.shields.io/badge/Status-Experimental-orange?style=for-the-badge)
 
-## Notes
-- Beta driver running in the kernel: panic risk. Roll back with the backed-up config.plist.
-- Without a Wi-Fi connection AWDL never syncs (no AW start event); this is a limitation of the driver design.
-- If Wi-Fi drops, remove `-itlawdlcoexmulti`. Router on channel 36–48 or 157 gives better Mac->iPhone speed.
-- Before updating macOS, boot once without `-btleadv`.
-- Keep your SMBIOS (serial/MLB/UUID/ROM) private; never upload your config.plist.
+</div>
 
-Credits: retropineaple (ForbiddenItlwm), acidanthera (Lilu, BTLEAdvFixup), OpenIntelWireless.
+A helper script and setup notes for experimenting with AirDrop/AWDL on an Intel Wi-Fi Hackintosh. The original test notes identify an AX201 adapter in an ASUS VivoBook K513EA with an Intel Core i5-1135G7 and macOS Sequoia 15.8.3 (24H241).
+
+This repository does not bundle third-party kext binaries. Obtain compatible builds from their upstream maintainers and review their licenses.
+
+## Components referenced
+
+- ForbiddenItlwm — Sequoia-compatible build from upstream
+- BTLEAdvFixup
+- Lilu
+- IntelBluetoothFirmware
+- BlueToolFixup
+
+Confirm current upstream release notes and dependency requirements before installing. Historical version numbers may be outdated.
+
+## Installation outline
+
+1. Back up the EFI you actually boot and prepare a separate USB test EFI.
+2. Obtain required kexts from their official upstream release pages.
+3. Place the expected kext bundles beside `install_airdrop.py`.
+4. Review the script and confirm its target OpenCore directory.
+5. Run:
+
+```bash
+python3 install_airdrop.py /Volumes/<EFI>/EFI/OC
+```
+
+6. Inspect the resulting `config.plist` and kext order before rebooting.
+7. Reset NVRAM only if required by the configuration and verify Wi-Fi, Bluetooth and AirDrop separately.
+
+## Diagnostics
+
+The original test notes use:
+
+```bash
+ioreg -l -w0 | grep -E '"ItlwmAWDL(InterfaceBuild|BuildCheck)"|"ITLAWDLCoex(Added|Channel|CountryLearned)"'
+```
+
+Values such as build verification and coexistence state are historical test expectations, not guarantees on other versions or hardware.
+
+## Known limitations and risks
+
+- The referenced ForbiddenItlwm build was a beta; kernel panics and regressions are possible.
+- AWDL depends on the Wi-Fi driver, Bluetooth stack, macOS build and router environment.
+- The original notes describe a requirement to remain connected to Wi-Fi for AWDL synchronization.
+- Router channel suggestions are environment-specific, not universal fixes.
+
+## Privacy
+
+Never publish `SystemSerialNumber`, `MLB`, `SystemUUID`, `ROM`, Wi-Fi credentials, personal identifiers, or unredacted diagnostic logs.
+
+## Contributing
+
+Include exact hardware IDs, macOS build, OpenCore version and sanitized logs. Describe the tested hardware/software combination.
+
+## Disclaimer
+
+Experimental Hackintosh community project. No warranty is provided. Keep a known-good EFI backup and follow upstream licenses and documentation.
